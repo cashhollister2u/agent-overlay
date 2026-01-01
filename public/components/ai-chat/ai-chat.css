@@ -1,0 +1,323 @@
+/* ============================================================
+   AI ASSISTANT — INLINE CHATGPT-STYLE GLASS BAR
+   ============================================================ */
+
+.chat-container {
+    display: flex;
+    flex: 1; 
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.ai-bar {
+    height: 40px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: auto;
+}
+
+/* ============================================================
+   CONVO SELECTION BOX
+   ============================================================ */
+.convo-box {
+    position: absolute; /* now relative to .dialog-window */
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 35%;
+    flex: 1;
+    display: flex;            
+    flex-direction: column;   
+    z-index: 1;
+}
+
+.convo-header {
+    border-radius: 2px;
+    padding: 10px;
+    cursor: grab;
+    user-select: none;
+    flex-shrink: 0;  
+    color: #605f5f;
+    font-size: 1rem;
+    font-weight: 500;
+    box-shadow: none;
+}
+
+.convo-names {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    flex-shrink: 0;  
+    flex-grow: 0;    
+}
+
+.convo-item {
+    position: relative;          /* needed for button absolute fill */
+    display: flex;
+    align-items: center;
+    height: 30px;
+    background: transparent;
+    white-space: nowrap;
+    flex-shrink: 0;
+    flex-grow: 0;
+    padding: 0;                  /* ensure clean fill */
+    overflow: hidden;            /* so btn stays inside */
+}
+
+.convo-btn {
+    position: absolute;          /* occupy full parent */
+    left: 0;
+    top: 0;
+    width: 100%;                 /* full width */
+    height: 100%;                /* full height */
+    display: flex;
+    align-items: center;
+    padding-left: 20px;
+    padding-right: 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 1;                  /* must sit above background */
+}
+
+/* removed temporarily */
+.remove-btn {
+    position: relative;
+    z-index: 2;                 
+    margin-left: auto;
+    visibility: hidden;
+}
+/* removed temporarily */
+
+
+.convo-item:hover {
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+}
+
+
+/* ============================================================
+   ICON BUTTONS (upload + microphone)
+   ============================================================ */
+
+.ai-icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.2s ease;
+}
+
+.ai-icon-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.ai-icon-btn svg {
+    width: 22px;
+    height: 22px;
+    color: #444;
+}
+
+.fileInputContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================================
+   FILE INPUT
+   ============================================================ */
+.ai-file-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.18);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.05);
+    padding: 6px 9px;
+}
+
+/* Remove button ("X") */
+.remove-btn {
+    display: flex;
+    justify-content: center;
+    width: 24px;          
+    height: 24px;          
+    padding: 0; 
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    color: #666;
+    margin-left: auto;
+    margin-right: 8px;
+}
+
+.remove-btn:hover {
+    color: #000;
+}
+
+
+/* ============================================================
+   Voice Input
+   ============================================================ */
+.ai-icon-btn.listening {
+    background: red;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+
+/* ============================================================
+   AI RESPONSE
+   ============================================================ */
+.noselect {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+}
+
+.dialog-box {
+    position: relative;
+    display: flex;   
+    flex-direction: column;   
+    flex: 1;
+}
+
+/* Header */
+.dialog-header {
+    display: flex;
+    padding: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    background: transparent;
+    cursor: grab;
+    font-weight: bold;
+    user-select: none;
+    flex-shrink: 0;  /* header stays fixed height */
+    flex-direction: row;
+}
+
+.active-convo-item {
+    background-color: rgba(0, 0, 0, 0.08);
+    border-radius: 6px;
+}
+
+.active-convo-name {
+    display: flex;
+    flex-direction: row;
+    color:#666;
+    margin-left: auto;
+    gap: 6px;
+}
+
+/* Messages Container */
+.dialog-window {
+    position: relative;
+    width: 100%;
+    border: none;
+    overflow: scroll;
+    outline: none;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    font-size: 16px;
+    resize: none;
+    flex: 1;          /* MAKES IT FILL THE BOX */
+}
+
+/* User Prompt-Input */
+.user-prompt {
+    margin: 8px;
+    margin-left: auto;
+    width: 40%;
+    border-radius: 4px;
+    padding: 10px;
+    overflow-wrap:break-word;
+}
+
+/* Ai Response */
+.ai-response {
+    align-content: center;
+    padding: 20px;
+    margin: 20px;
+    background: transparent;
+    color: #333;
+}
+
+
+/* ============================================================
+   TEXT INPUT
+   ============================================================ */
+.ai-input {
+    flex: 1;
+    height: 42px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    align-content: center;
+    background: transparent;
+    border: none;
+    resize: none;
+    font-size: 1rem;
+    font-weight: 500;
+    font-family: monospace;
+}
+
+.ai-input::placeholder {
+    color: #605f5f;
+    opacity: 0.7;
+}
+
+.ai-input:focus {
+    outline: none;
+}
+
+/* ============================================================
+   SEND BUTTON
+   ============================================================ */
+
+.ai-send {
+    height: 44px;
+    padding: 0 20px;
+
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+
+    background: linear-gradient(135deg, #2b2b2b, #00FF7F);
+    color: #2b2b2b;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 600;
+    font-size: 1rem;
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 14px rgba(108, 99, 255, 0.35);
+}
+
+.ai-send:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 26px rgba(108, 99, 255, 0.45);
+}

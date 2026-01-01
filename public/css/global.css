@@ -1,0 +1,66 @@
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.45);
+    overflow: hidden;
+    /* pointer-events: none; ensures click-through in renderer too */
+}
+
+.app-1 {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    flex-direction:row;
+    align-items: stretch;
+}
+
+[data-component]{
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.region-1 {
+    display: flex;
+    width: 20%;
+}
+
+.region-2 {
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+    height: 100%;
+    min-height: 0;
+    align-items: stretch;
+}
+
+.region-3 {
+    display: flex;
+    width: 20%;
+}
+
+.app-font-color {
+    color: #00FF7F;
+}
+
+.app-font-family {
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        "Liberation Mono",
+        "Courier New",
+        monospace;
+}
+
+.app-background {
+    background: rgba(32, 32, 32, 0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgb(63, 63, 63);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.15);
+}
