@@ -60,8 +60,91 @@ function loadComponentScriptOnce(name, src) {
   });
 }
 
-// Example usage:
+function createRegion({
+  id,
+  row,
+  col,
+  rowSpan = 1,
+  colSpan = 1,
+  className = "",
+}) {
+  const el = document.createElement("div");
+  el.id = id;
+  el.className = `region ${className}`.trim();
+
+  // 1-based grid lines
+  el.style.gridRow = `${row} / span ${rowSpan}`;
+  el.style.gridColumn = `${col} / span ${colSpan}`;
+
+  // Close button
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "region-close";
+  closeBtn.innerHTML = "×";
+
+  closeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    el.remove();
+  });
+
+  el.appendChild(closeBtn);
+  return el;
+}
+
+function cellsForRect(row, col, rowSpan, colSpan) {
+  const cells = [];
+  for (let r = row; r < row + rowSpan; r++) {
+    for (let c = col; c < col + colSpan; c++) {
+      cells.push(key(r, c));
+    }
+  }
+  return cells;
+}
+
+function canPlace(row, col, rowSpan, colSpan) {
+  return cellsForRect(row, col, rowSpan, colSpan).every(k => !occupied.has(k));
+}
+
+function markOccupied(row, col, rowSpan, colSpan) {
+  for (const k of cellsForRect(row, col, rowSpan, colSpan)) occupied.add(k);
+}
+
+function unmarkOccupied(row, col, rowSpan, colSpan) {
+  for (const k of cellsForRect(row, col, rowSpan, colSpan)) occupied.delete(k);
+}
+
+function addRegion(spec) {
+  const { row, col, rowSpan = 1, colSpan = 1 } = spec;
+
+  if (!canPlace(row, col, rowSpan, colSpan)) {
+    console.warn("Cannot place region: cells occupied");
+    return null;
+  }
+
+  markOccupied(row, col, rowSpan, colSpan);
+
+  const el = createRegion({
+    ...spec,
+    className: "region",
+    onClose: () => unmarkOccupied(row, col, rowSpan, colSpan),
+  });
+
+  app.appendChild(el);
+  return el;
+}
+
+
+// Main //
+
+const app = document.getElementById('app');
+const occupied = new Set(); 
+const key = (r, c) => `${r},${c}`;
+
 (async () => {
-  await loadComponent("ai-chat", "region2");
-  await loadComponent("tooltip");
+  let success = null;
+  success = addRegion({ id: "region1", row: 1, col: 1, rowSpan: 2, colSpan: 2 });
+  if (success)
+    await loadComponent("ai-chat", "region1");
+  success = addRegion({ id: "region2", row: 3, col: 2, rowSpan: 2, colSpan: 2 });
+  if (success)
+    await loadComponent("ai-chat", "region2");
 })();

@@ -21,8 +21,9 @@ function createOverlay() {
     skipTaskbar: true,
     focusable: true, // overlays usually shouldn’t steal focus
     webPreferences: {
-      contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
     },
   });
 
