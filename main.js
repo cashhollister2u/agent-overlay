@@ -5,25 +5,14 @@ let win = null;
 function createOverlay() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
     win = new BrowserWindow({
-    show: false, // IMPORTANT
-    x: 0,
-    y: 0,
-    width,
-    height,
-    frame: false,
-    transparent: true,
-    resizable: false,
-    movable: false,
-    fullscreenable: false,
-    hasShadow: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    focusable: true,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
+      show: false,
+      frame: false,
+      transparent: true,
+      fullscreenable: true,
+      simpleFullscreen: true, // 👈 key
+      skipTaskbar: true,
+      alwaysOnTop: true,
+      webPreferences: { /* ... */ },
   });
 
   win.setAlwaysOnTop(true, "screen-saver", 1);
@@ -31,10 +20,10 @@ function createOverlay() {
 
   win.once("ready-to-show", () => {
     app.focus({ steal: true });
+    win.setSimpleFullScreen(true);
     win.show();
-    win.focus();
   });
-  
+
   // Keep window focused at all times
   win.on("blur", () => {
     if (win.isVisible()) {
