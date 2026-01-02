@@ -11,9 +11,11 @@
     min-width: 0;
     min-height: 0;
     overflow: hidden; 
+    color: #ffffff;
 }
 
 .ai-bar {
+    position: relative;
     height: 40px;
     padding: 8px 12px;
     display: flex;
@@ -26,7 +28,7 @@
    CONVO SELECTION BOX
    ============================================================ */
 .convo-box {
-    position: absolute; /* now relative to .dialog-window */
+    position: absolute; 
     top: 0;
     left: 0;
     height: 100%;
@@ -34,7 +36,7 @@
     flex: 1;
     display: flex;            
     flex-direction: column;   
-    z-index: 1;
+    z-index: 3;
 }
 
 .convo-header {
@@ -43,7 +45,6 @@
     cursor: grab;
     user-select: none;
     flex-shrink: 0;  
-    color: #605f5f;
     font-size: 1rem;
     font-weight: 500;
     box-shadow: none;
@@ -59,7 +60,7 @@
 }
 
 .convo-item {
-    position: relative;          /* needed for button absolute fill */
+    position: relative;         
     display: flex;
     align-items: center;
     height: 30px;
@@ -67,16 +68,16 @@
     white-space: nowrap;
     flex-shrink: 0;
     flex-grow: 0;
-    padding: 0;                  /* ensure clean fill */
-    overflow: hidden;            /* so btn stays inside */
+    padding: 0;                  
+    overflow: hidden;           
 }
 
 .convo-btn {
-    position: absolute;          /* occupy full parent */
+    position: absolute;          
     left: 0;
     top: 0;
-    width: 100%;                 /* full width */
-    height: 100%;                /* full height */
+    width: 100%;                 
+    height: 100%;                
     display: flex;
     align-items: center;
     padding-left: 20px;
@@ -84,18 +85,8 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    z-index: 1;                  /* must sit above background */
+    z-index: 1;                  
 }
-
-/* removed temporarily */
-.remove-btn {
-    position: relative;
-    z-index: 2;                 
-    margin-left: auto;
-    visibility: hidden;
-}
-/* removed temporarily */
-
 
 .convo-item:hover {
     background: rgba(0, 0, 0, 0.08);
@@ -126,14 +117,27 @@
 }
 
 .ai-icon-btn svg {
+    color: #ffffff;
     width: 22px;
     height: 22px;
-    color: #444;
 }
 
 .fileInputContainer {
     display: flex;
     flex-direction: column;
+}
+
+/* ============================================================
+   INDICATORS
+   ============================================================ */
+.indicator-window {
+    position: absolute; 
+    bottom: 100%;
+    left: 0;
+    display: flex;            
+    flex-direction: column;   
+    z-index: 2;
+    padding: 12px;
 }
 
 /* ============================================================
@@ -157,6 +161,7 @@
 .remove-btn {
     display: flex;
     justify-content: center;
+    align-items: center;
     width: 24px;          
     height: 24px;          
     padding: 0; 
@@ -165,9 +170,9 @@
     cursor: pointer;
     font-size: 18px;
     line-height: 1;
-    color: #666;
     margin-left: auto;
     margin-right: 8px;
+    color: #ffffff;
 }
 
 .remove-btn:hover {
@@ -229,7 +234,6 @@
 .active-convo-name {
     display: flex;
     flex-direction: row;
-    color:#666;
     margin-left: auto;
     gap: 6px;
 }
@@ -242,11 +246,12 @@
     overflow: scroll;
     outline: none;
     display: flex;
+    min-height: 0;
     flex-direction: column;
     background: transparent;
     font-size: 16px;
     resize: none;
-    flex: 1;          /* MAKES IT FILL THE BOX */
+    flex: 1;         
 }
 
 /* User Prompt-Input */
@@ -265,7 +270,6 @@
     padding: 20px;
     margin: 20px;
     background: transparent;
-    color: #333;
 }
 
 
@@ -287,7 +291,6 @@
 }
 
 .ai-input::placeholder {
-    color: #605f5f;
     opacity: 0.7;
 }
 
@@ -309,7 +312,6 @@
     cursor: pointer;
 
     background: linear-gradient(135deg, #2b2b2b, #00FF7F);
-    color: #2b2b2b;
 
     display: flex;
     align-items: center;
