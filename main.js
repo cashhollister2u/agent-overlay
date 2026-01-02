@@ -1,12 +1,11 @@
 const { app, BrowserWindow, screen, globalShortcut } = require("electron");
 const path = require("path");
-
 let win = null;
 
 function createOverlay() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-
-  win = new BrowserWindow({
+    win = new BrowserWindow({
+    show: false, // IMPORTANT
     x: 0,
     y: 0,
     width,
@@ -19,12 +18,35 @@ function createOverlay() {
     hasShadow: false,
     alwaysOnTop: true,
     skipTaskbar: true,
-    focusable: true, // overlays usually shouldn’t steal focus
+    focusable: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
     },
+  });
+
+  win.setAlwaysOnTop(true, "screen-saver", 1);
+  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+  win.once("ready-to-show", () => {
+    app.focus({ steal: true });
+    win.show();
+    win.focus();
+  });
+  
+  // Keep window focused at all times
+  win.on("blur", () => {
+    if (win.isVisible()) {
+      win.focus();
+    }
+  });
+
+  screen.on("display-metrics-changed", () => {
+    if (win?.isVisible()) {
+      app.focus({ steal: true });
+      win.focus();
+    }
   });
 
   globalShortcut.register("Escape", () => {
@@ -33,21 +55,18 @@ function createOverlay() {
     if (win.isVisible()) {
       win.hide();
     } else {
+      app.focus({ steal: true });
       win.show();
+      win.focus();
     }
   });
 
-  // mac/win behavior varies; this is the “strong” level
-  win.setAlwaysOnTop(true, "screen-saver");
-  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-
-  // Click-through overlay
-  // win.setIgnoreMouseEvents(true, { forward: true });
-
-  win.loadFile(path.join(__dirname, "public/index.html")); // <— adjust path if needed
+  win.loadFile(path.join(__dirname, "public/index.html"));
 }
 
 app.whenReady().then(createOverlay);
+
+app.dock.hide();
 
 app.on("will-quit", () => {
   globalShortcut.unregisterAll();

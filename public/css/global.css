@@ -11,8 +11,12 @@ html, body {
   display: grid;
   grid-template-columns: repeat(4, 1fr); /* arbitrary grid resolution */
   grid-template-rows: repeat(4, 1fr);
-  height: 100vh;
+  height: 97%;
   width: 100vw;
+}
+
+.app-header {
+    height: 3%;
 }
 
 .region {
@@ -106,7 +110,7 @@ html, body {
     height: 20px;
     border: none;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.6);
+    background: transparent;
     color: white;
     margin-left: auto;
     font-size: 14px;
