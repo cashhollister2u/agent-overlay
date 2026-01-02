@@ -476,10 +476,12 @@ const loader = new ComponentLoader();
   window.overlayAPI?.onToggleRegions(() => {
     toggleRegions();
   });
+  console.log(layout)
+  if (layout.occupied.size <= 0)
+  {
+    const starter = layout.addRegion({ row: 1, col: 2, rowSpan: 4, colSpan: 2 });
+    if (starter) await loader.load("ai-chat", starter.el);
+  }
+  
 
-  const r1 = layout.addRegion({ row: 1, col: 1, rowSpan: 2, colSpan: 2 });
-  if (r1) await loader.load("ai-chat", r1.el);
-
-  const r2 = layout.addRegion({ row: 3, col: 3, rowSpan: 1, colSpan: 1 });
-  if (r2) await loader.load("ai-chat", r2.el);
 })();
