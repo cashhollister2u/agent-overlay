@@ -482,6 +482,4 @@ const loader = new ComponentLoader();
     const starter = layout.addRegion({ row: 1, col: 2, rowSpan: 4, colSpan: 2 });
     if (starter) await loader.load("ai-chat", starter.el);
   }
-  
-
 })();
