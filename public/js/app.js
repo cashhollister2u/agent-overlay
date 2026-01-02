@@ -16,6 +16,13 @@ class ComponentLoader {
     window.__components = window.__components || {}; // { [name]: { init: fn } }
     this.loadedScripts = new Set();
     this.loadedCss = new Set();
+    this.registry = this.listAvailable();
+  }
+
+  async listAvailable() {
+    if (this.registry) return this.registry;
+    this.registry = await fetch("./components/components.json").then(r => r.json());
+    return this.registry;
   }
 
   async load(name, targetEl, props = {}) {
@@ -207,7 +214,7 @@ class GridLayout {
       for (const c of range(1, this.cols+1)) {
         if (this.canPlaceRect(r, c, 1, 1)) {
           const tmpRegion = layout.addRegion({ row: r, col: c, rowSpan: 1, colSpan: 1, regionType: "available-region" });
-          if (tmpRegion) await loader.load("available-region", tmpRegion.el);
+          if (tmpRegion) await loader.load("available-region", tmpRegion.el, { loader });
         }
       }
     }
@@ -445,6 +452,7 @@ const loader = new ComponentLoader();
 
 
 (async () => {
+
   const r1 = layout.addRegion({ row: 1, col: 1, rowSpan: 2, colSpan: 2 });
   if (r1) await loader.load("ai-chat", r1.el);
 

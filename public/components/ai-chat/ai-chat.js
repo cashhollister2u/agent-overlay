@@ -371,7 +371,7 @@
   }
 
   window.__components["ai-chat"] = {
-    init(root, props) {
+      init(root, props) {
       // store instance on root if you want access later
       root.__aiChat = new AiChat(root, props);
     },
