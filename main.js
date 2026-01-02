@@ -9,10 +9,14 @@ function createOverlay() {
       frame: false,
       transparent: true,
       fullscreenable: true,
-      simpleFullscreen: true, // 👈 key
+      simpleFullscreen: true, 
       skipTaskbar: true,
       alwaysOnTop: true,
-      webPreferences: { /* ... */ },
+      webPreferences: {
+        preload: path.join(__dirname, "preload.js"),
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
   });
 
   win.setAlwaysOnTop(true, "screen-saver", 1);
@@ -49,6 +53,13 @@ function createOverlay() {
       win.focus();
     }
   });
+
+  globalShortcut.register("Option+Shift+=", () => {
+    if (!win) return;
+    if (!win.isVisible()) win.show();
+    win.webContents.send("toggle-regions");
+  });
+
 
   win.loadFile(path.join(__dirname, "public/index.html"));
 }

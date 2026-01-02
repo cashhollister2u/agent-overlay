@@ -5,7 +5,11 @@
         constructor(root, props = {}) {
             this.root = root;
             this.props = props;
-            this.registry = this.props.loader.registry;
+            this.loader = this.props.loader;
+            this.layout = this.props.layout;
+            this.registry = this.loader.registry;
+            this.regionEl = this.root.closest(".region");
+            this.region = this.layout.findRegionByEl(this.regionEl);
 
             const $ = (sel) => this.root.querySelector(sel);
             
@@ -20,10 +24,17 @@
                 optBtn.classList.add("app-background")
                 optBtn.classList.add("app-btn")
                 optBtn.classList.add("app-background")
+                optBtn.addEventListener("click", () => {
+                    this.layout.removeRegion(this.region);
+                    let newSpec = {...this.region.spec};
+                    newSpec.regionType = name;
+                    const newRegion = this.layout.addRegion(newSpec);
+                    console.log(newRegion)
+                    if (newRegion) this.loader.load(name, newRegion.el);
+                })
                 this.optContainer.appendChild(optBtn);
             }
         }
-
     }
 
     window.__components["available-region"] = {

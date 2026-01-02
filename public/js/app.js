@@ -6,6 +6,16 @@ function* range(start, end, step = 1) {
     yield i;
   }
 }
+function toggleRegions() {
+  const showBtn = document.querySelector('[data-action="showRegions"]');
+  const hideBtn = document.querySelector('[data-action="hideRegions"]');
+
+  if (hideBtn && !hideBtn.classList.contains("hidden")) {
+    hideBtn.click();
+  } else if (showBtn) {
+    showBtn.click();
+  }
+}
 
 // =============================
 // ComponentLoader
@@ -210,11 +220,14 @@ class GridLayout {
   async showRegions(btn) {
     btn?.classList.add("hidden");
     document.querySelector('[data-action="hideRegions"]')?.classList.remove("hidden");
+    this.regions.forEach( region => {
+      region.el.classList.add("is-disabled")
+    })
     for (const r of range(1, this.rows+1)) {
       for (const c of range(1, this.cols+1)) {
         if (this.canPlaceRect(r, c, 1, 1)) {
           const tmpRegion = layout.addRegion({ row: r, col: c, rowSpan: 1, colSpan: 1, regionType: "available-region" });
-          if (tmpRegion) await loader.load("available-region", tmpRegion.el, { loader });
+          if (tmpRegion) await loader.load("available-region", tmpRegion.el, { loader, layout });
         }
       }
     }
@@ -222,11 +235,19 @@ class GridLayout {
 
   async hideRegions(btn) {
     btn?.classList.add("hidden");
+    this.regions.forEach( region => {
+      region.el.classList.remove("is-disabled")
+    })
     document.querySelector('[data-action="showRegions"]')?.classList.remove("hidden");
-    console.log("hide")
-    const toRemove = [...this.regions].filter(r => r.el.dataset.regionType === "available-region");;
-    console.log(toRemove)
+    const toRemove = [...this.regions].filter(r => r.el.dataset.regionType === "available-region");
     for (const region of toRemove) this.removeRegion(region);
+  }
+
+  findRegionByEl(regionEl) {
+    for (const r of this.regions) {
+      if (r.el === regionEl) return r;
+    }
+    return null;
   }
 
   cellsForRect(row, col, rowSpan, colSpan) {
@@ -452,6 +473,9 @@ const loader = new ComponentLoader();
 
 
 (async () => {
+  window.overlayAPI?.onToggleRegions(() => {
+    toggleRegions();
+  });
 
   const r1 = layout.addRegion({ row: 1, col: 1, rowSpan: 2, colSpan: 2 });
   if (r1) await loader.load("ai-chat", r1.el);
