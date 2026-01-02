@@ -1,4 +1,3 @@
-ADD and REMOVE btns for each region
-resizing regions 
-adding regions default 1
-drag comps between regions
+add region functionalit to the available region comps
+add preview of dragging /resizing
+delete regions dragged over

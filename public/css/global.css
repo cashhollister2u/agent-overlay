@@ -7,16 +7,42 @@ html, body {
     /* pointer-events: none; ensures click-through in renderer too */
 }
 
+.hidden {
+  display: none;
+}
+
+:root {
+  --grid-cols: 4;
+  --grid-rows: 4;
+}
+
 #app {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* arbitrary grid resolution */
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--grid-cols), 1fr);
+  grid-template-rows: repeat(var(--grid-rows), 1fr);
   height: 97%;
   width: 100vw;
 }
 
 .app-header {
     height: 3%;
+    display: flex;
+    align-items: center;
+    padding-right: 10px;
+}
+
+.manage-regions {
+    border: none;
+    font-size: larger;
+    box-shadow: none;
+    margin-left: auto;
+    color: white;
+    background-color: transparent;
+}
+
+.manage-regions:hover {
+  background: rgba(52, 52, 52, 0.85);
+  border-radius: 8px;
 }
 
 .region {

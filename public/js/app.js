@@ -1,4 +1,13 @@
 // =============================
+// Helpers
+// =============================
+function* range(start, end, step = 1) {
+  for (let i = start; i < end; i += step) {
+    yield i;
+  }
+}
+
+// =============================
 // ComponentLoader
 // =============================
 class ComponentLoader {
@@ -88,9 +97,11 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 class Region {
   constructor(layout, spec) {
     this.layout = layout;
+    this.regionType = spec.regionType || "";  
     this.spec = { ...spec }; // { row, col, rowSpan, colSpan }
     this.el = document.createElement("div");
     this.el.className = "region";
+    if (this.regionType) this.el.dataset.regionType = this.regionType;
 
     // store spec on dataset (useful for debugging / CSS hooks)
     this.applyGrid(this.spec);
@@ -143,6 +154,10 @@ class Region {
 class GridLayout {
   constructor(appEl) {
     this.appEl = appEl;
+    this.styles = getComputedStyle(appEl);
+
+    this.cols = parseInt(this.styles.getPropertyValue("--grid-cols"), 10);
+    this.rows = parseInt(this.styles.getPropertyValue("--grid-rows"), 10);
     this.occupied = new Set(); // "r,c"
     this.regions = new Set();
 
@@ -157,10 +172,54 @@ class GridLayout {
     appEl.addEventListener("pointermove", this.onPointerMove);
     appEl.addEventListener("pointerup", this.onPointerUp);
     appEl.addEventListener("pointercancel", this.onPointerUp);
+    
+    this.bindEvents();
   }
 
   key(r, c) {
     return `${r},${c}`;
+  }
+
+  bindEvents() {
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-action]");
+        if (!btn) return;
+
+        const action = btn.dataset.action;
+
+        switch (action) {
+          case "showRegions":
+            this.showRegions(btn);
+            break;
+          case "hideRegions":
+            this.hideRegions(btn);
+            break;
+          default:
+            break;
+        }
+      });
+    }
+  
+  async showRegions(btn) {
+    btn?.classList.add("hidden");
+    document.querySelector('[data-action="hideRegions"]')?.classList.remove("hidden");
+    for (const r of range(1, this.rows+1)) {
+      for (const c of range(1, this.cols+1)) {
+        if (this.canPlaceRect(r, c, 1, 1)) {
+          const tmpRegion = layout.addRegion({ row: r, col: c, rowSpan: 1, colSpan: 1, regionType: "available-region" });
+          if (tmpRegion) await loader.load("available-region", tmpRegion.el);
+        }
+      }
+    }
+  }
+
+  async hideRegions(btn) {
+    btn?.classList.add("hidden");
+    document.querySelector('[data-action="showRegions"]')?.classList.remove("hidden");
+    console.log("hide")
+    const toRemove = [...this.regions].filter(r => r.el.dataset.regionType === "available-region");;
+    console.log(toRemove)
+    for (const region of toRemove) this.removeRegion(region);
   }
 
   cellsForRect(row, col, rowSpan, colSpan) {
@@ -206,7 +265,7 @@ class GridLayout {
   }
 
   addRegion(spec) {
-    const { row, col, rowSpan = 1, colSpan = 1 } = spec;
+    const { row, col, rowSpan = 1, colSpan = 1, regionType } = spec;
 
     if (!this.canPlaceRect(row, col, rowSpan, colSpan)) {
       console.warn("Cannot place region: cells occupied", spec);
@@ -215,7 +274,7 @@ class GridLayout {
 
     this.markRect(row, col, rowSpan, colSpan);
 
-    const region = new Region(this, { row, col, rowSpan, colSpan });
+    const region = new Region(this, { row, col, rowSpan, colSpan, regionType });
     this.appEl.appendChild(region.el);
     this.regions.add(region);
 
@@ -260,8 +319,6 @@ class GridLayout {
 
     // free current occupancy so it can resize over its own space
     this.unmarkRect(startSpec.row, startSpec.col, startSpec.rowSpan, startSpec.colSpan);
-
-
 
     if (resizeHandle) {
       this.active = {
