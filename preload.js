@@ -21,5 +21,7 @@ contextBridge.exposeInMainWorld("overlayAPI", {
     ipcRenderer.removeAllListeners(`chat-chunk-${messageId}`);
     ipcRenderer.removeAllListeners(`chat-end-${messageId}`);
     ipcRenderer.removeAllListeners(`chat-error-${messageId}`);
-  }
+  },
+
+  listTools: () => ipcRenderer.invoke("listTools"),
 });

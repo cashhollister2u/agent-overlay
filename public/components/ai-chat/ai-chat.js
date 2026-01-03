@@ -41,6 +41,12 @@
       // initial state
       this.convoBox.style.visibility = "hidden";
       this.dialogBox.style.visibility = "hidden";
+
+      this.init();
+    }
+
+    async init() {
+      this.sendAIMessage("Can you introduce youself and provide me only documentation of your capabilites based on your available tools.")
     }
 
     bindEvents() {
@@ -334,19 +340,20 @@
       });
     }
 
-    async sendAIMessage() {
+    async sendAIMessage(systemMsg=null) {
       const messageId = await window.overlayAPI.uuid();
       this.dialogBox.style.visibility = "visible";
 
-      const message = this.textInput.value.trim();
+      let message = this.textInput.value.trim();
       const convoId = this.activeConvoId.value;
 
-      if (!message && this.audioInput.files.length === 0 && this.fileInput.files.length === 0) return;
+      if (!message && ! systemMsg && this.audioInput.files.length === 0 && this.fileInput.files.length === 0) return;
 
       if (message) this.appendUserPrompt(message);
       this.dialogWindow.scrollTop = this.dialogWindow.scrollHeight;
       this.textInput.value = "";
 
+      if (systemMsg) message = systemMsg;
 
       // const formData = new FormData();
       // formData.append("convo_id", convoId);
@@ -361,6 +368,8 @@
       //   headers: { "X-CSRFToken": this.getCookie?.("csrftoken") },
       //   body: formData,
       // });
+
+      console.log("message", message)
 
       await this.stream(messageId);
 

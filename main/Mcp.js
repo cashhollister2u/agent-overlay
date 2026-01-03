@@ -2,12 +2,35 @@ const { spawn } = require("child_process");
 const path = require("path");
 
 let mcpProcess = null;
-let mcpTools = []; 
+
+let stdoutBuffer = "";
+let nextId = 1;
+const pending = new Map(); // id -> { resolve, reject, timeout }
+
+function sendRpc(method, params) {
+  return new Promise((resolve, reject) => {
+    if (!mcpProcess) return reject(new Error("MCP process not started"));
+
+    const id = nextId++;
+    const msg = JSON.stringify({ jsonrpc: "2.0", id, method, params }) + "\n";
+
+    const timeout = setTimeout(() => {
+      pending.delete(id);
+      reject(new Error(`MCP timeout calling ${method}`));
+    }, 30000);
+
+    pending.set(id, { resolve, reject, timeout });
+    mcpProcess.stdin.write(msg);
+  });
+}
 
 async function startMCP() {
-  const pyPath = process.platform === 'win32'
-  ? path.join(__dirname, "..", "mcp", ".venv", "Scripts", "python.exe")
-  : path.join(__dirname, "..", "mcp", ".venv", "bin", "python");
+  if (mcpProcess) return; // already running
+
+  const pyPath =
+    process.platform === "win32"
+      ? path.join(__dirname, "..", "mcp", ".venv", "Scripts", "python.exe")
+      : path.join(__dirname, "..", "mcp", ".venv", "bin", "python");
 
   const serverPath = path.join(__dirname, "..", "mcp", "mcp_server.py");
 
@@ -16,95 +39,72 @@ async function startMCP() {
     env: { ...process.env, PYTHONUNBUFFERED: "1" },
   });
 
-  py.stderr.on("data", (d) => console.log("[py:err]", d.toString()));
-  py.stdout.on("data", (d) => console.log("[py:out]", d.toString()));
+  mcpProcess = py;
 
-  py.on("exit", (code) => console.log("python exited", code));
+  py.stderr.on("data", (d) => console.log("[mcp:err]", d.toString()));
 
-  // establishes handshake
-  const initMsg = JSON.stringify({
-    jsonrpc: "2.0",
-    id: 0,
-    method: "initialize",
-    params: {
-      protocolVersion: "v1",
-      capabilities: {},
-      clientInfo: {
-        name: "electron-app",
-        version: "1.0.0"
-      }
-    }
-  }) + "\n";
-
-  //tests that the connection is established
-  const pingMsg = JSON.stringify({
-    jsonrpc: "2.0",
-    id: 1,
-    method: "tools/call",
-    params: {
-      name: "custom_ping",
-      arguments: {}
-    }
-  }) + "\n";
-
-  // Send ping after receiving init response
   py.stdout.on("data", (d) => {
-    const line = d.toString();
-    try {
-      const msg = JSON.parse(line);
-      if (msg.id === 0 && msg.result !== undefined) {
-        console.log("Initialization complete, sending ping...");
-        py.stdin.write(pingMsg);
+    stdoutBuffer += d.toString("utf8");
+    const lines = stdoutBuffer.split("\n");
+    stdoutBuffer = lines.pop(); // keep incomplete last line
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+
+      let msg;
+      try {
+        msg = JSON.parse(trimmed);
+      } catch {
+        console.log("[mcp:out non-json]", trimmed);
+        continue;
       }
-    } catch (err) {
-      console.error("Failed to parse py stdout:", err);
+
+      // Resolve pending requests by id
+      if (msg.id != null && pending.has(msg.id)) {
+        const { resolve, reject, timeout } = pending.get(msg.id);
+        clearTimeout(timeout);
+        pending.delete(msg.id);
+
+        if (msg.error) reject(new Error(msg.error.message || "MCP error"));
+        else resolve(msg.result);
+      } else {
+        // notifications/logs from server (optional)
+        // console.log("[mcp:msg]", msg);
+      }
     }
   });
 
-  // Kick off initialization
-  py.stdin.write(initMsg);
+  py.on("exit", (code) => {
+    console.log("MCP python exited", code);
+    mcpProcess = null;
+
+    for (const [id, p] of pending.entries()) {
+      clearTimeout(p.timeout);
+      p.reject(new Error("MCP server exited"));
+      pending.delete(id);
+    }
+  });
+
+  // 1) Handshake
+  await sendRpc("initialize", {
+    protocolVersion: "v1",
+    capabilities: {},
+    clientInfo: { name: "electron-app", version: "1.0.0" },
+  });
+
+  console.log("MCP initialized");
 }
 
+async function listTools() {
+  // Standard MCP method
+  return sendRpc("tools/list", {});
+}
 
-
-// Call MCP tool via JSON-RPC
-async function callMcpTool(toolName, args) {
-  return new Promise((resolve, reject) => {
-    const id = Date.now();
-    const msg = JSON.stringify({
-      jsonrpc: "2.0",
-      id: id,
-      method: "tools/call",
-      params: {
-        name: toolName,
-        arguments: args
-      }
-    }) + "\n";
-
-    const handler = (d) => {
-      try {
-        const response = JSON.parse(d.toString());
-        if (response.id === id) {
-          mcpProcess.stdout.off("data", handler);
-          if (response.error) {
-            reject(new Error(response.error.message));
-          } else {
-            resolve(response.result);
-          }
-        }
-      } catch (err) {
-        // Not our response, ignore
-      }
-    };
-
-    mcpProcess.stdout.on("data", handler);
-    mcpProcess.stdin.write(msg);
-
-    // Timeout after 30 seconds
-    setTimeout(() => {
-      mcpProcess.stdout.off("data", handler);
-      reject(new Error("Tool call timeout"));
-    }, 30000);
+async function callTool(name, args = {}) {
+  return sendRpc("tools/call", {
+    name,
+    arguments: args,
   });
 }
 
@@ -115,4 +115,4 @@ function stopMcpServer() {
   }
 }
 
-module.exports = { startMCP, stopMcpServer };
+module.exports = { startMCP, listTools, callTool, stopMcpServer };

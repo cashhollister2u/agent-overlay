@@ -1,8 +1,9 @@
 const { app, BrowserWindow, screen, globalShortcut, ipcMain } = require("electron");
 const { chatWithLLM } = require('./main/ChatLLM')
-const { startMCP, stopMcpServer } = require('./main/Mcp')
+const { startMCP, listTools, callTool, stopMcpServer } = require('./main/Mcp')
 const { v4: uuidv4 } = require("uuid");
 const { marked } = require('marked');
+const hljs = require('highlight.js');
 const path = require("path");
 
 let win = null;
@@ -38,6 +39,7 @@ function createOverlay() {
     if (win.isVisible()) {
       win.focus();
     }
+    
   });
 
   screen.on("display-metrics-changed", () => {
@@ -76,8 +78,6 @@ ipcMain.handle('marked', async (event, buffer) => {
   return marked.parse(buffer);
 });
 
-const hljs = require('highlight.js');
-
 ipcMain.handle('highlight', (_event, { code }) => {
   if (typeof code !== 'string') code = String(code ?? '');
 
@@ -106,8 +106,20 @@ ipcMain.handle('chat', async (event, messageId, message, history) => {
   }
 });
 
+ipcMain.handle('listTools', async (event) => {
+  const tools = await listTools();
+  return JSON.stringify(tools, null, 2);
+})
+
 app.whenReady().then(async () => {
   await startMCP();
+
+  // const result = await callTool("custom_ping", {});
+  // console.log("PING RESULT:", result);
+
+  // const tools = await listTools();
+  // console.log(JSON.stringify(tools, null, 2));
+
   createOverlay();
 })
 

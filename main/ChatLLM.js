@@ -1,6 +1,8 @@
+const { startMCP, listTools, callTool, stopMcpServer } = require('./Mcp')
 const http = require("http");
 
 async function chatWithLLM(message, history, onChunk) {
+  const tools = await listTools();
   return new Promise((resolve, reject) => {
     const req = http.request({
       hostname: 'localhost',
@@ -18,7 +20,7 @@ async function chatWithLLM(message, history, onChunk) {
       messages: [
         {
           role: "system",
-          content: "[ Instructions ] You are a helpful assistant. Utilize markdown when appropriate and surround code blocs with ``` ```"
+          content: `[ Instructions ] You are a tool calling assistant. \nUtilize markdown when appropriate \nAvailable Tools:\n${JSON.stringify(tools, null, 2)}`
         },
         ...history, 
         { role: "user", content: message }]
