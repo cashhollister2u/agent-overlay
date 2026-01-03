@@ -210,3 +210,22 @@ html, body {
 .app-btn:hover {
     background-color: rgb(104, 103, 103);
 }
+
+pre {
+  color: #abb2bf;
+  background: #282c34;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgb(63, 63, 63);
+  box-shadow: 0 6px 22px rgba(0,0,0,0.15);
+  border-radius: 6px;
+  overflow-x: auto;
+  padding: 1em
+}
+
+pre code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  
+}
+

@@ -2,7 +2,6 @@ import ComponentLoader from './app/ComponentLoader.js';
 import GridLayout from './app/GridLayout.js';
 import { toggleRegions } from './app/Region.js';
 
-
 const app = document.getElementById("app");   
 const loader = new ComponentLoader();
 const layout = new GridLayout(app, loader);

@@ -18,7 +18,7 @@ async function chatWithLLM(message, history, onChunk) {
       messages: [
         {
           role: "system",
-          content: "[ Instructions ] You are a helpful assistant. Utilize markdown when appropriate and stay on topic."
+          content: "[ Instructions ] You are a helpful assistant. Utilize markdown when appropriate and surround code blocs with ``` ```"
         },
         ...history, 
         { role: "user", content: message }]

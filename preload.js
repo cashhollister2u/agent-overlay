@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld("overlayAPI", {
   uuid: () => ipcRenderer.invoke("uuid"),
 
   marked: (buffer) => ipcRenderer.invoke("marked", buffer),
+  highlight: (code) =>ipcRenderer.invoke('highlight', { code }),
 
   onToggleRegions: (cb) => ipcRenderer.on("toggle-regions", cb),
   

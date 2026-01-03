@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "axios": "^1.13.2",
+    "highlight.js": "^11.11.1",
     "marked": "^17.0.1",
     "uuid": "^13.0.0"
   }

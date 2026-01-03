@@ -284,8 +284,31 @@
       this.mediaRecorder?.stop();
     }
 
+    async highlightCodeBlocks(container) {
+      const codeBlocks = container.querySelectorAll('pre code');
+
+      for (const codeEl of codeBlocks) {
+        // Skip if already highlighted (important if you ever enable chunk-highlighting)
+        if (codeEl.dataset.hljsDone === "1") continue;
+
+        const rawCode = codeEl.textContent ?? "";
+
+        // If marked added a language-xxx class, pass it through (optional)
+        const langClass = Array.from(codeEl.classList).find(c => c.startsWith('language-'));
+        const language = langClass ? langClass.replace('language-', '') : undefined;
+
+        const { html, language: detected } = await window.overlayAPI.highlight(rawCode, language);
+
+        codeEl.innerHTML = html;           
+        codeEl.classList.add('hljs');      // hljs theme selectors use this
+        codeEl.dataset.hljsDone = "1";
+
+        // If you want, add detected language as a class
+        if (detected) codeEl.classList.add(`language-${detected}`);
+      }
+    }
+
     async stream(messageId) {
-      console.log('streaming: ', messageId)
       const aiDiv = document.createElement("div");
       aiDiv.className = "ai-response";
       this.dialogWindow.appendChild(aiDiv);
@@ -294,14 +317,15 @@
 
       window.overlayAPI.listenToChatStream(messageId, {
         onChunk: async (chunk) => {
-          console.log(chunk)
           buffer += chunk;
-          console.log(window.overlayAPI.marked(buffer))
           aiDiv.innerHTML = await window.overlayAPI.marked(buffer);
+          this.dialogWindow.scrollTop = this.dialogWindow.scrollHeight;
         },
         onEnd: async () => {
           aiDiv.innerHTML = await window.overlayAPI.marked(buffer);
+          await this.highlightCodeBlocks(aiDiv);
           window.overlayAPI.removeChatListeners(messageId);
+          this.dialogWindow.scrollTop = this.dialogWindow.scrollHeight;
         },
         onError: (err) => {
           aiDiv.innerHTML += `<div class="error">Error: ${err}</div>`;

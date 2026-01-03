@@ -76,6 +76,19 @@ ipcMain.handle('marked', async (event, buffer) => {
   return marked.parse(buffer);
 });
 
+const hljs = require('highlight.js');
+
+ipcMain.handle('highlight', (_event, { code }) => {
+  if (typeof code !== 'string') code = String(code ?? '');
+
+  let result = hljs.highlightAuto(code);
+
+  return {
+    html: result.value,          // highlighted HTML spans
+    language: result.language,   // detected language
+  };
+});
+
 ipcMain.handle('chat', async (event, messageId, message, history) => {
   const webContents = event.sender;
 
