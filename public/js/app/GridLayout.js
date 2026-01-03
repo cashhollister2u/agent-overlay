@@ -12,8 +12,9 @@ function* range(start, end, step = 1) {
 }
 
 export default class GridLayout {
-  constructor(appEl) {
+  constructor(appEl, loader) {
     this.appEl = appEl;
+    this.loader = loader
     this.styles = getComputedStyle(appEl);
 
     this.cols = parseInt(this.styles.getPropertyValue("--grid-cols"), 10);
@@ -69,8 +70,8 @@ export default class GridLayout {
     for (const r of range(1, this.rows+1)) {
       for (const c of range(1, this.cols+1)) {
         if (this.canPlaceRect(r, c, 1, 1)) {
-          const tmpRegion = layout.addRegion({ row: r, col: c, rowSpan: 1, colSpan: 1, regionType: "available-region" });
-          if (tmpRegion) await loader.load("available-region", tmpRegion.el, { loader, layout });
+          const tmpRegion = this.addRegion({ row: r, col: c, rowSpan: 1, colSpan: 1, regionType: "available-region" });
+          if (tmpRegion) await this.loader.load("available-region", tmpRegion.el, { loader:this.loader, layout:this });
         }
       }
     }

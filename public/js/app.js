@@ -4,8 +4,8 @@ import { toggleRegions } from './app/Region.js';
 
 
 const app = document.getElementById("app");   
-const layout = new GridLayout(app);
 const loader = new ComponentLoader();
+const layout = new GridLayout(app, loader);
 (async () => {
   window.overlayAPI?.onToggleRegions(() => {
     toggleRegions();

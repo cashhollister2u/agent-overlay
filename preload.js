@@ -1,8 +1,9 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-
 contextBridge.exposeInMainWorld("overlayAPI", {
   uuid: () => ipcRenderer.invoke("uuid"),
+
+  marked: (buffer) => ipcRenderer.invoke("marked", buffer),
 
   onToggleRegions: (cb) => ipcRenderer.on("toggle-regions", cb),
   

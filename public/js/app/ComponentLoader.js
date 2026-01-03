@@ -13,7 +13,7 @@ export default class ComponentLoader {
     return this.registry;
   }
 
-  async load(name, targetEl, props = {}) {
+  async load(name, targetEl, props = {}, inactive = false) {
     const base = `./components/${name}/${name}`;
 
     const [html, css] = await Promise.all([
@@ -43,6 +43,9 @@ export default class ComponentLoader {
     root.innerHTML = html;
 
     targetEl.appendChild(root);
+
+    if (inactive)
+      targetEl.classList.add("is-disabled")
 
     // JS once
     await this.loadScriptOnce(name, `${base}.js`);

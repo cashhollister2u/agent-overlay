@@ -23,14 +23,12 @@
                 optBtn.textContent = name;
                 optBtn.classList.add("app-background")
                 optBtn.classList.add("app-btn")
-                optBtn.classList.add("app-background")
                 optBtn.addEventListener("click", () => {
                     this.layout.removeRegion(this.region);
                     let newSpec = {...this.region.spec};
                     newSpec.regionType = name;
                     const newRegion = this.layout.addRegion(newSpec);
-                    console.log(newRegion)
-                    if (newRegion) this.loader.load(name, newRegion.el);
+                    if (newRegion) this.loader.load(name, newRegion.el, {}, true);
                 })
                 this.optContainer.appendChild(optBtn);
             }

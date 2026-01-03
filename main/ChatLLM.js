@@ -13,9 +13,15 @@ async function chatWithLLM(message, history, onChunk) {
     });
 
     const body = JSON.stringify({
-      model: 'mistral',
+      model: 'gemma:2b',
       stream: true,
-      messages: [...history, { role: "user", content: message }]
+      messages: [
+        {
+          role: "system",
+          content: "[ Instructions ] You are a helpful assistant. Utilize markdown when appropriate and stay on topic."
+        },
+        ...history, 
+        { role: "user", content: message }]
     });
 
     req.write(body);

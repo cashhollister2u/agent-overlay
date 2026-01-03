@@ -9,7 +9,7 @@ async function startMCP() {
   ? path.join(__dirname, "..", "mcp", ".venv", "Scripts", "python.exe")
   : path.join(__dirname, "..", "mcp", ".venv", "bin", "python");
 
-  const serverPath = path.join(__dirname, "mcp", "mcp_server.py");
+  const serverPath = path.join(__dirname, "..", "mcp", "mcp_server.py");
 
   const py = spawn(pyPath, ["-u", serverPath], {
     stdio: ["pipe", "pipe", "pipe"],

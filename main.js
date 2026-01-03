@@ -2,6 +2,7 @@ const { app, BrowserWindow, screen, globalShortcut, ipcMain } = require("electro
 const { chatWithLLM } = require('./main/ChatLLM')
 const { startMCP, stopMcpServer } = require('./main/Mcp')
 const { v4: uuidv4 } = require("uuid");
+const { marked } = require('marked');
 const path = require("path");
 
 let win = null;
@@ -69,6 +70,10 @@ function createOverlay() {
 
 ipcMain.handle('uuid', async () => {
   return uuidv4()
+});
+
+ipcMain.handle('marked', async (event, buffer) => {
+  return marked.parse(buffer);
 });
 
 ipcMain.handle('chat', async (event, messageId, message, history) => {

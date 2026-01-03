@@ -293,13 +293,14 @@
       let buffer = "";
 
       window.overlayAPI.listenToChatStream(messageId, {
-        onChunk: (chunk) => {
+        onChunk: async (chunk) => {
           console.log(chunk)
           buffer += chunk;
-          aiDiv.innerHTML += chunk;
+          console.log(window.overlayAPI.marked(buffer))
+          aiDiv.innerHTML = await window.overlayAPI.marked(buffer);
         },
-        onEnd: () => {
-          console.log("Stream complete");
+        onEnd: async () => {
+          aiDiv.innerHTML = await window.overlayAPI.marked(buffer);
           window.overlayAPI.removeChatListeners(messageId);
         },
         onError: (err) => {
