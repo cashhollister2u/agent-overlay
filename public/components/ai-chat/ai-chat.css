@@ -12,6 +12,8 @@
     min-height: 0;
     overflow: hidden; 
     color: #ffffff;
+    box-sizing: border-box; /* fixes bug associated with right border not showing */
+
 }
 
 .ai-bar {
@@ -209,6 +211,7 @@
     position: relative;
     display: flex;   
     flex-direction: column;   
+    overflow: hidden;
     flex: 1;
 }
 
@@ -249,7 +252,7 @@
     min-height: 0;
     flex-direction: column;
     background: transparent;
-    font-size: 16px;
+    font-size: 14px;
     resize: none;
     flex: 1;         
 }
@@ -261,6 +264,7 @@
     width: 40%;
     border-radius: 4px;
     padding: 10px;
+    font-size: 14px;
     overflow-wrap:break-word;
 }
 
@@ -269,6 +273,7 @@
     align-content: center;
     padding: 20px;
     margin: 20px;
+    font-size: 16px;
     background: transparent;
 }
 

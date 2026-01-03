@@ -11,6 +11,7 @@
     min-height: 0;
     overflow: hidden; 
     color: #ffffff;
+    box-sizing: border-box;
 }
 
 .options-container {

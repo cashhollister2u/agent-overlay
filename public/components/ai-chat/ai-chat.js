@@ -30,6 +30,8 @@
       this.audioChunks = [];
       this.recording = false;
 
+      this.history = []
+
       // If you have a global cookie helper, use it; else pass in via props
       this.getCookie = props.getCookie || window.getCookie;
       this.parseMarkdown = props.parseMarkdown || window.parseMarkdown || ((t) => this.escapeHtml(t));
@@ -282,49 +284,33 @@
       this.mediaRecorder?.stop();
     }
 
-    async stream(response, msgId, fileName) {
+    async stream(messageId) {
+      console.log('streaming: ', messageId)
       const aiDiv = document.createElement("div");
       aiDiv.className = "ai-response";
       this.dialogWindow.appendChild(aiDiv);
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
       let buffer = "";
-      let finalizedHTML = "";
 
-      aiDiv.innerHTML = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-
-        // preview
-        aiDiv.innerHTML = finalizedHTML + this.escapeHtml(buffer);
-
-        const endsSentence = /[.!?]\s$/.test(buffer);
-        if (endsSentence) {
-          finalizedHTML += this.parseMarkdown(buffer);
-          buffer = "";
-          aiDiv.innerHTML = finalizedHTML;
+      window.overlayAPI.listenToChatStream(messageId, {
+        onChunk: (chunk) => {
+          console.log(chunk)
+          buffer += chunk;
+          aiDiv.innerHTML += chunk;
+        },
+        onEnd: () => {
+          console.log("Stream complete");
+          window.overlayAPI.removeChatListeners(messageId);
+        },
+        onError: (err) => {
+          aiDiv.innerHTML += `<div class="error">Error: ${err}</div>`;
+          window.overlayAPI.removeChatListeners(messageId);
         }
-
-        this.dialogWindow.scrollTop = this.dialogWindow.scrollHeight;
-      }
-
-      if (buffer.length) {
-        finalizedHTML += this.parseMarkdown(buffer);
-        aiDiv.innerHTML = finalizedHTML;
-
-        if (fileName) {
-          aiDiv.appendChild(this.buildFileLink(msgId, fileName));
-        }
-      }
+      });
     }
 
     async sendAIMessage() {
+      const messageId = await window.overlayAPI.uuid();
       this.dialogBox.style.visibility = "visible";
 
       const message = this.textInput.value.trim();
@@ -336,34 +322,41 @@
       this.dialogWindow.scrollTop = this.dialogWindow.scrollHeight;
       this.textInput.value = "";
 
-      const formData = new FormData();
-      formData.append("convo_id", convoId);
-      formData.append("history", this.dialogWindow.innerText);
-      formData.append("message", message);
 
-      if (this.fileInput.files.length) formData.append("file", this.fileInput.files[0]);
-      if (this.audioInput.files.length) formData.append("audio", this.audioInput.files[0]);
+      // const formData = new FormData();
+      // formData.append("convo_id", convoId);
+      // formData.append("history", this.dialogWindow.innerText);
+      // formData.append("message", message);
 
-      const response = await fetch("/api/ai-message/", {
-        method: "POST",
-        headers: { "X-CSRFToken": this.getCookie?.("csrftoken") },
-        body: formData,
-      });
+      // if (this.fileInput.files.length) formData.append("file", this.fileInput.files[0]);
+      // if (this.audioInput.files.length) formData.append("audio", this.audioInput.files[0]);
 
-      const newConvoId = response.headers.get("X-Convo-ID");
-      const newConvoName = response.headers.get("X-Convo-Name");
-      const msgId = response.headers.get("X-Message-ID");
-      const fileName = response.headers.get("X-File-Name");
-      const audioTranscript = response.headers.get("X-Audio-Trans");
+      // const response = await fetch("/api/ai-message/", {
+      //   method: "POST",
+      //   headers: { "X-CSRFToken": this.getCookie?.("csrftoken") },
+      //   body: formData,
+      // });
+
+      await this.stream(messageId);
+
+      await window.overlayAPI.chat(messageId, message, this.history);
+
+      // console.log(response);
+      // this.history += response.history
+      
+
+      // const newConvoId = response.headers.get("X-Convo-ID");
+      // const newConvoName = response.headers.get("X-Convo-Name");
+      // const msgId = response.headers.get("X-Message-ID");
+      // const fileName = response.headers.get("X-File-Name");
+      // const audioTranscript = response.headers.get("X-Audio-Trans");
 
       if (!message && audioTranscript) this.appendUserPrompt(audioTranscript);
 
-      this.activeConvoId.value = newConvoId || convoId;
-      if (newConvoId && newConvoName) {
-        this.updateConversationList(newConvoId, newConvoName);
-      }
-
-      await this.stream(response, msgId, fileName);
+      // this.activeConvoId.value = newConvoId || convoId;
+      // if (newConvoId && newConvoName) {
+      //   this.updateConversationList(newConvoId, newConvoName);
+      // }
 
       this.clearFile();
       this.clearAudio();
