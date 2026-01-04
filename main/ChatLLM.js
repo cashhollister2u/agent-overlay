@@ -1,89 +1,86 @@
 const { startMCP, listTools, callTool, stopMcpServer } = require('./Mcp')
 const http = require("http");
 
-// async function chatWithLLM(message, history, onChunk) {
-//   const tools = await listTools();
-//   return new Promise((resolve, reject) => {
-//     const req = http.request({
-//       hostname: 'localhost',
-//       port: 11434,
-//       path: '/api/chat',
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json'
-//       }
-//     });
+async function chatWithLLM(message, history, toolContext, onChunk) {
+  return new Promise((resolve, reject) => {
+    const req = http.request({
+      hostname: 'localhost',
+      port: 11434,
+      path: '/api/chat',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
 
-//     const body = JSON.stringify({
-//       model: 'mistral',
-//       stream: true,
-//       messages: [
-//         {
-//           role: "system",
-//           // content: `[ Instructions ] You are helpful assistant. \nUtilize markdown when appropriate`,
-//           content: `[ Instructions ] You are a tool calling assistant. Only respond using the json template no other text. \nAvailable Tools:\n${JSON.stringify(tools, null, 2)} \nRespond only by filling out the template below [always wrap the template response in a json code block]: \n
-//           {
-//             "tool": tool_name,
-//             "arguments": {}
-//           }`
-//         },
-//         ...history, 
-//         { role: "user", content: message }]
-//     });
+    const body = JSON.stringify({
+      model: 'mistral',
+      stream: true,
+      messages: [
+        {
+          role: "system",
+          content: `[ Instructions ] You are helpful assistant. \nUtilize markdown when appropriate`,
+        },
+        ...history, 
+        { role: "system", content: toolContext},
+        { role: "user", content: message }]
+    });
 
-//     req.write(body);
-//     req.end();
+    req.write(body);
+    req.end();
 
-//     let buffer = "";
+    let buffer = "";
 
-//     req.on("response", (res) => {
-//       res.setEncoding("utf8");
-//       res.on("data", (chunk) => {
-//         buffer += chunk;
-//         const lines = buffer.split("\n");
+    req.on("response", (res) => {
+      res.setEncoding("utf8");
+      res.on("data", (chunk) => {
+        buffer += chunk;
+        const lines = buffer.split("\n");
 
-//         buffer = lines.pop(); // save incomplete last line
+        buffer = lines.pop(); // save incomplete last line
 
-//         for (const line of lines) {
-//           if (!line.trim()) continue;
+        for (const line of lines) {
+          if (!line.trim()) continue;
 
-//           try {
-//             const parsed = JSON.parse(line);
-//             const content = parsed.message?.content || "";
+          try {
+            const parsed = JSON.parse(line);
+            const content = parsed.message?.content || "";
 
-//             if (content && typeof onChunk === "function") {
-//               onChunk(content);
-//             }
-//           } catch (err) {
-//             console.error("Stream parse error:", err);
-//           }
-//         }
-//       });
+            if (content && typeof onChunk === "function") {
+              onChunk(content);
+            }
+          } catch (err) {
+            console.error("Stream parse error:", err);
+          }
+        }
+      });
 
-//       res.on("end", () => {
-//         resolve();
-//       });
-//     });
+      res.on("end", () => {
+        resolve();
+      });
+    });
 
-//     req.on("error", (err) => reject(err));
-//   });
-// }
+    req.on("error", (err) => reject(err));
+  });
+}
 
-// const { startMCP, listTools, callTool, stopMcpServer } = require('./Mcp');
 
-function extractToolCallJsonObject(text) {
+async function extractToolCallJsonObject(text) {
   const match = text.match(
     /(\{\s*"tool"\s*:\s*"[^"]+"\s*,\s*"arguments"\s*:\s*\{[\s\S]*?\}\s*\})/
   );
   return match ? match[1].trim() : null;
 }
 
-function parseJsonFromLLM(content) {
+async function validateTool(content) {
   try {
-    const toolString = extractToolCallJsonObject(content);
+    const toolString = await extractToolCallJsonObject(content);
     const tool = JSON.parse(toolString);
     const keys = Object.keys(tool)
-    if (keys.length !== 2 || !keys.includes("tool") || !keys.includes("arguments")) 
+    const availableTools = await listTools();
+    
+    const validTool = Array.isArray(availableTools.tools) && availableTools.tools.some(t => t.name === tool.tool);
+    if (keys.length !== 2 || !keys.includes("tool") || !keys.includes("arguments") || !validTool) 
       return {
         tool:`[Error] Invalid tool call. Tools must adhere to the tool template: 
               {
@@ -92,7 +89,7 @@ function parseJsonFromLLM(content) {
               }`,
         success: false};
     return {
-      tool: JSON.stringify(tool),
+      tool: tool,
       success: true
     };
   } catch (err) {
@@ -107,7 +104,8 @@ function parseJsonFromLLM(content) {
   }
 }
 
-async function callLLMTools(message, history, feedback) {
+
+async function selectTool(message, history, feedback) {
   message = `${feedback}\n ${message}`
   const tools = await listTools();
 
@@ -175,4 +173,4 @@ async function callLLMTools(message, history, feedback) {
   });
 }
 
-module.exports = { callLLMTools, parseJsonFromLLM };
+module.exports = { selectTool, validateTool, chatWithLLM };

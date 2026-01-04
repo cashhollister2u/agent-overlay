@@ -12,7 +12,7 @@ def custom_ping() -> dict:
 @mcp.tool()
 def get_datetime() -> dict:
     """ Tool to get current datetime """
-    return {"content": datetime.now().strftime('%M%D%Y %H%M%S')}
+    return {"content": f'Current time [%Y/%m/%d %H:%M:%S]: {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}'}
 
 @mcp.tool()
 def add(a: int, b: int) -> dict:

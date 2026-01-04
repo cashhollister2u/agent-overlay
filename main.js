@@ -1,5 +1,5 @@
 const { app, BrowserWindow, screen, globalShortcut, ipcMain } = require("electron");
-const { callLLMTools, parseJsonFromLLM } = require('./main/ChatLLM')
+const { selectTool, validateTool, chatWithLLM } = require('./main/ChatLLM')
 const { startMCP, listTools, callTool, stopMcpServer } = require('./main/Mcp')
 const { v4: uuidv4 } = require("uuid");
 const { marked } = require('marked');
@@ -92,37 +92,40 @@ ipcMain.handle('highlight', (_event, { code }) => {
 ipcMain.handle('chat', async (event, messageId, message, history) => {
   const webContents = event.sender;
 
-  feedback = ""
+  let feedback = "";
+  let validatedTool = null;
   let attempt = 0 
   while (attempt < 5)
   {
-    const content = await callLLMTools(message, history, feedback)
-    const result = parseJsonFromLLM(content.content);
+    const content = await selectTool(message, history, feedback)
+    const result = await validateTool(content.content);
     if (result.success) {
-      console.log(result.tool);
+      validatedTool = result.tool;
       break
     }
     else {
       feedback = result.tool;
       console.log(result.tool);
-    }
-      
-      
+    }      
     attempt += 1;
   }
 
-  // try {
-  //   await chatWithLLM(message, history, (chunk) => {
-  //     webContents.send(`chat-chunk-${messageId}`, chunk);
-  //   });
+  console.log(validatedTool);
+  const toolContext = await callTool(validatedTool.tool, validatedTool.arguments)
+  console.log('tool context', toolContext.content[0].text)
 
-  //   webContents.send(`chat-end-${messageId}`);
-  //   return { messageId };
-  // } catch (err) {
-  //   console.error('Chat error:', err);
-  //   webContents.send(`chat-error-${messageId}`, err.message);
-  //   return { messageId };
-  // }
+  try {
+    await chatWithLLM(message, history, toolContext.content[0].text, (chunk) => {
+      webContents.send(`chat-chunk-${messageId}`, chunk);
+    });
+
+    webContents.send(`chat-end-${messageId}`);
+    return { messageId };
+  } catch (err) {
+    console.error('Chat error:', err);
+    webContents.send(`chat-error-${messageId}`, err.message);
+    return { messageId };
+  }
 });
 
 ipcMain.handle('listTools', async (event) => {
