@@ -46,7 +46,7 @@
     }
 
     async init() {
-      this.sendAIMessage("Can you introduce youself and provide me only documentation of your capabilites based on your available tools.")
+      // this.sendAIMessage("Can you introduce youself and provide me only documentation of your capabilites based on your available tools.")
     }
 
     bindEvents() {

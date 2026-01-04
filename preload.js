@@ -24,4 +24,5 @@ contextBridge.exposeInMainWorld("overlayAPI", {
   },
 
   listTools: () => ipcRenderer.invoke("listTools"),
+  callTool: (name, args) => ipcRenderer.invoke("callTool", name, args),
 });
