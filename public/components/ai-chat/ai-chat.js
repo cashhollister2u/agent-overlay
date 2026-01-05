@@ -52,6 +52,10 @@
     }
 
     async init() {
+      const conversations = await window.overlayAPI.getConversations();
+      conversations.forEach((convo) => {
+        this.updateConversationList(convo.id, convo.title);
+      })
       this.sendAIMessage("Call your available tools tool and list the output", false)
     }
 
@@ -178,11 +182,12 @@
       if (existing) existing.remove();
 
       const item = document.createElement("div");
-      item.className = "convo-item";
+      item.classList.add('convo-item')
       item.dataset.convoId = String(convoId);
 
       const openBtn = document.createElement("button");
-      openBtn.className = "convo-btn";
+      openBtn.classList.add("convo-btn");
+
       openBtn.type = "button";
       openBtn.textContent = convoName;
       openBtn.addEventListener("click", () => this.openConversation(convoId, convoName));

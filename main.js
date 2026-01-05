@@ -166,8 +166,8 @@ ipcMain.handle('callTool', async (event, name, args) => {
   return JSON.stringify(response, null, 2);
 })
 
-ipcMain.handle('get-conversations', async (event) => {
-  const response = await db.getConversations();
+ipcMain.handle('getConversations', async (event) => {
+  return await db.getConversations();
 })
 
 ipcMain.handle('addConversation', async (event, convoId, convoTitle) => {
