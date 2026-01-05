@@ -101,6 +101,7 @@ ipcMain.handle('chat', async (event, messageId, message, history, skipTools=fals
     let attempt = 0 
     while (attempt < 5)
     {
+      webContents.send(`tool-call-${messageId}`, 'Selecting Tool...');
       // AI Selects the best fit tool 
       const content = await selectTool(message, history, feedback)
       // The tool is validated based on the tools available in the mcp server
@@ -116,14 +117,12 @@ ipcMain.handle('chat', async (event, messageId, message, history, skipTools=fals
       attempt += 1;
     }
 
-    console.log(validatedTool);
+    webContents.send(`tool-call-${messageId}`, `Calling tool: ${validatedTool.tool}`);
+
     //After the tool is validated the tool is called on the mcp server
     const response = await callTool(validatedTool.tool, validatedTool.arguments)
     // The response is recieved from the server and parsed to json object
     toolContext = JSON.parse(response.content[0].text);
-    console.log(toolContext.content)
-    console.log(toolContext.function_name)
-    console.log(toolContext.args)
 
     // This allows the mpc server to call subiquent tool calls related to the UI management
     const aiTools = new AITools(toolContext.function_name)

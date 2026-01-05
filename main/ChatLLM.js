@@ -76,18 +76,14 @@ async function validateTool(content) {
   try {
     const toolString = await extractToolCallJsonObject(content);
     const tool = JSON.parse(toolString);
+    console.log(tool)
     const keys = Object.keys(tool)
     const availableTools = await listTools();
     
     const validTool = Array.isArray(availableTools.tools) && availableTools.tools.some(t => t.name === tool.tool);
     if (keys.length !== 2 || !keys.includes("tool") || !keys.includes("arguments") || !validTool) 
-      return {
-        tool:`[Error] Invalid tool call. Tools must adhere to the tool template: 
-              {
-                "tool": tool_name,
-                "arguments": {}
-              }`,
-        success: false};
+      throw new Error();
+
     return {
       tool: tool,
       success: true
@@ -99,15 +95,18 @@ async function validateTool(content) {
               {
                 "tool": tool_name,
                 "arguments": {}
-              }`,
+              }\n
+              Available Tools:\n
+                  ${JSON.stringify(tools, null, 2)}`,
         success: false};
   }
 }
 
-async function selectTool(message, history, feedback, widgets) {
+async function selectTool(message, history, feedback) {
   message = `${feedback}\n ${message}`
   const tools = await listTools();
-  console.log(tools)
+  // console.log(tools)
+
   return new Promise((resolve, reject) => {
     const req = http.request(
       {

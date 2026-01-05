@@ -30,6 +30,9 @@
       this.audioChunks = [];
       this.recording = false;
 
+      this.loading = false
+      this.loadingIndicator = null
+
       this.history = []
 
       // If you have a global cookie helper, use it; else pass in via props
@@ -322,7 +325,14 @@
       let buffer = "";
 
       window.overlayAPI.listenToChatStream(messageId, {
+        onToolCall: async (toolName) => {
+          console.log('tool name:', toolName)
+          this.setLoadingText(toolName)
+        },
         onChunk: async (chunk) => {
+          if (this.loading) {
+            await this.setLoading(this.dialogWindow, false)
+          }
           buffer += chunk;
           aiDiv.innerHTML = await window.overlayAPI.marked(buffer);
           this.dialogWindow.scrollTop = this.dialogWindow.scrollHeight;
@@ -340,7 +350,49 @@
       });
     }
 
+    async setLoadingText(text) {
+      const el = this.loadingIndicator?.querySelector(".loading-text");
+      if (el) el.textContent = text;
+    }
+
+    async setLoading(container, isLoading) {
+      this.loading = isLoading
+
+      if (isLoading) {
+        this.loadingIndicator = document.createElement('div')
+        this.loadingIndicator.classList.add('chat-loading')
+
+        const spinner = document.createElement("div");
+        spinner.classList.add("line-spinner");
+
+        for (let i = 0; i < 12; i++) {
+          const line = document.createElement("span");
+          line.style.transform = `rotate(${i * 30}deg) translate(0, -8px)`;
+          line.style.animationDelay = `${i * 0.08}s`;
+          spinner.appendChild(line);
+        }
+
+
+        const loadingText = document.createElement("div");
+        loadingText.classList.add("loading-text");
+        loadingText.classList.add('app-font-color-2')
+        loadingText.textContent = "Loading...";
+
+        this.loadingIndicator.appendChild(spinner);
+        this.loadingIndicator.appendChild(loadingText);
+
+        container.appendChild(this.loadingIndicator);
+      }
+      else if (this.loadingIndicator) {
+          await new Promise(r => setTimeout(r, 2000));
+          this.loadingIndicator.remove();
+          this.loadingIndicator = null;
+          this.loading = false;
+      }
+    }
+
     async sendAIMessage(systemMsg=null, skipTools=false) {
+
       const messageId = await window.overlayAPI.uuid();
       this.dialogBox.style.visibility = "visible";
 
@@ -350,6 +402,8 @@
       if (!message && ! systemMsg && this.audioInput.files.length === 0 && this.fileInput.files.length === 0) return;
 
       if (message) this.appendUserPrompt(message);
+      await this.setLoading(this.dialogWindow, true)
+
       this.dialogWindow.scrollTop = this.dialogWindow.scrollHeight;
       this.textInput.value = "";
 

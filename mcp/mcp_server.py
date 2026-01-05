@@ -21,7 +21,7 @@ add_widget_desc = f"""
     {json.dumps(registered_widgets)}
     """
 @mcp.tool(description=add_widget_desc)
-def add_widget(widget_name:str, column_index:int, row_index:int, column_span:int, row_span:int) -> dict:
+def Add_Widget(widget_name:str, column_index:int, row_index:int, column_span:int, row_span:int) -> dict:
     return asdict(McpResponse(
         f"Tell the user that a widget has been created at this location [do not explain how to create a widget]: column_index:{column_index}, row_index:{row_index}, column_span:{column_span}, row_span:{row_span}",
         "addWidget",
@@ -34,7 +34,7 @@ def add_widget(widget_name:str, column_index:int, row_index:int, column_span:int
         }))
 
 @mcp.tool()
-async def available_tools() -> dict:
+async def Available_Tools() -> dict:
     """
     List all available tools with name and description.
     """
@@ -48,17 +48,17 @@ async def available_tools() -> dict:
     return asdict(McpResponse(str(tools), "", {}))
 
 @mcp.tool()
-def get_datetime() -> dict:
+def Get_Datetime() -> dict:
     """ Tool to get current datetime """
     return asdict(McpResponse(f'Current time [%Y/%m/%d %H:%M:%S]: {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}', "", {}))
 
 @mcp.tool()
-def add(a: int, b: int) -> dict:
+def Add(a: int, b: int) -> dict:
     """Add two numbers."""
     return asdict(McpResponse(str( a + b), "", {}))
 
 @mcp.tool()
-def Conversation() -> dict:
+def Conversational_Model() -> dict:
     """ Handles requests not related to any of the available tools no arguments required """
     return asdict(McpResponse("[ Instructions ] You are a helpful AI assistant. \nUtilize markdown when appropriate", "", {}))
 

@@ -179,6 +179,11 @@ html, body {
     color: #00FF7F;
 }
 
+.app-font-color-2 {
+    color: rgba(88, 88, 88, 0.85);
+}
+
+
 .app-font-family {
     font-family:
         ui-monospace,
@@ -228,4 +233,27 @@ pre code {
   font-size: 14px;
   
 }
+
+.line-spinner {
+  position: relative;
+  
+}
+
+.line-spinner span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 6px;
+  background: rgba(88, 88, 88, 0.85);
+  border-radius: 8px;
+  transform-origin: center 4px;
+  animation: fade 1s linear infinite;
+}
+
+@keyframes fade {
+  0% { opacity: 1; }
+  100% { opacity: 0.15; }
+}
+
 

@@ -334,3 +334,16 @@
     box-shadow: 0 7px 26px rgba(108, 99, 255, 0.45);
 }
 
+.chat-loading {
+    display: flex;
+    margin-top: 18px;
+    margin-left: auto;
+    margin-right: 10%;
+    justify-content: center;
+    gap: 20px;
+}
+
+.loading-text {
+    margin-top: 8px;
+    font-size: large;
+}
