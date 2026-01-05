@@ -1,4 +1,6 @@
-const { startMCP, listTools, callTool, stopMcpServer } = require('./Mcp')
+const { startMCP, listTools, callTool, stopMcpServer } = require('./Mcp');
+const fs = require("fs/promises");
+const path = require("path");
 const http = require("http");
 
 async function chatWithLLM(message, history, toolContext, onChunk) {
@@ -104,11 +106,9 @@ async function validateTool(content) {
   }
 }
 
-
-async function selectTool(message, history, feedback) {
+async function selectTool(message, history, feedback, widgets) {
   message = `${feedback}\n ${message}`
   const tools = await listTools();
-
   return new Promise((resolve, reject) => {
     const req = http.request(
       {
@@ -153,8 +153,8 @@ async function selectTool(message, history, feedback) {
       messages: [
         {
           role: "system",
-          content: `[ Instructions ] You are a tool calling assistant. Only respond using the json template no other text.
-                    Available Tools:
+          content: `[ Instructions ] You are a tool calling assistant. Only respond using the json template no other text.\n
+                    Available Tools:\n
                     ${JSON.stringify(tools, null, 2)}
 
                     Respond only by filling out the template below:

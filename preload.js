@@ -6,8 +6,10 @@ contextBridge.exposeInMainWorld("overlayAPI", {
   marked: (buffer) => ipcRenderer.invoke("marked", buffer),
   highlight: (code) =>ipcRenderer.invoke('highlight', { code }),
 
-  onToggleRegions: (cb) => ipcRenderer.on("toggle-regions", cb),
+  onToggleRegions: (callback) => ipcRenderer.on("toggle-regions", callback),
   
+  addWidget: (callback) => {ipcRenderer.on("addWidget", (_event, payload) => callback(payload));},
+
   chat: (messageId, message, history) => ipcRenderer.invoke("chat", messageId, message, history),
   listenToChatStream: (messageId, handlers) => {
     if (handlers.onChunk)

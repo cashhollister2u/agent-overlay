@@ -1,5 +1,6 @@
 const { app, BrowserWindow, screen, globalShortcut, ipcMain } = require("electron");
 const { selectTool, validateTool, chatWithLLM } = require('./main/ChatLLM')
+const { AITools } = require('./main/AITools')
 const { startMCP, listTools, callTool, stopMcpServer } = require('./main/Mcp')
 const { v4: uuidv4 } = require("uuid");
 const { marked } = require('marked');
@@ -111,8 +112,16 @@ ipcMain.handle('chat', async (event, messageId, message, history) => {
   }
 
   console.log(validatedTool);
-  const toolContext = await callTool(validatedTool.tool, validatedTool.arguments)
-  console.log('tool context', toolContext.content[0].text)
+  const response = await callTool(validatedTool.tool, validatedTool.arguments)
+  const toolContext = JSON.parse(response.content[0].text);
+  console.log(toolContext.content)
+  console.log(toolContext.function_name)
+  console.log(toolContext.args)
+
+  const aiTools = new AITools(toolContext.function_name)
+  console.log('validated', await aiTools.validate())
+  if (await aiTools.validate()) 
+    await aiTools.execute(win, toolContext.args)
 
   try {
     await chatWithLLM(message, history, toolContext.content[0].text, (chunk) => {

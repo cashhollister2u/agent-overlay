@@ -41,7 +41,7 @@ async function startMCP() {
 
   mcpProcess = py;
 
-  py.stderr.on("data", (d) => console.log("[mcp:err]", d.toString()));
+  // py.stderr.on("data", (d) => console.log("[mcp:err]", d.toString()));
 
   py.stdout.on("data", (d) => {
     stdoutBuffer += d.toString("utf8");

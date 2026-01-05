@@ -1,29 +1,5 @@
 {
     "ai-chat": {
-        "description": ""
-    },
-    "ai-chat1": {
-        "description": ""
-    },
-    "ai-chat2": {
-        "description": ""
-    },
-    "ai-chat3": {
-        "description": ""
-    },
-    "ai-chat4": {
-        "description": ""
-    },
-    "ai-chat5": {
-        "description": ""
-    },
-    "ai-chat6": {
-        "description": ""
-    },
-    "ai-chat7": {
-        "description": ""
-    },
-    "ai-chat8": {
-        "description": ""
+        "description": "Widget responsible for AI-Chat functionality"
     }
 }
