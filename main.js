@@ -1,6 +1,7 @@
 const { app, BrowserWindow, screen, globalShortcut, ipcMain } = require("electron");
 const { selectTool, validateTool, chatWithLLM } = require('./main/ChatLLM')
 const { AITools } = require('./main/AITools')
+const { AppDatabase } = require('./main/AppDatabase')
 const { startMCP, listTools, callTool, stopMcpServer } = require('./main/Mcp')
 const { v4: uuidv4 } = require("uuid");
 const { marked } = require('marked');
@@ -8,6 +9,7 @@ const hljs = require('highlight.js');
 const path = require("path");
 
 let win = null;
+let db = null;
 
 function createOverlay() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
@@ -164,8 +166,22 @@ ipcMain.handle('callTool', async (event, name, args) => {
   return JSON.stringify(response, null, 2);
 })
 
+ipcMain.handle('get-conversations', async (event) => {
+  const response = await db.getConversations();
+})
+
+ipcMain.handle('addConversation', async (event, convoId, convoTitle) => {
+  let response = await db.addConversation(convoId, convoTitle);
+  console.log('added convo to db')
+  response = await db.getConversations();
+  console.log(response)
+
+})
+
 app.whenReady().then(async () => {
   await startMCP();
+  db = new AppDatabase();
+  db.init();
   createOverlay();
 })
 

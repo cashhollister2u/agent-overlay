@@ -16,6 +16,9 @@
       this.convoNames = $('[data-role="convoNames"]');
       this.activeConvoId = $('[data-role="activeConvoId"]');
 
+      this.convoTitle = ""
+      this.convoTitleLimit = 25
+
       this.textInput = $('[data-role="textInput"]');
 
       this.fileInput = $('[data-role="fileInput"]');
@@ -330,14 +333,14 @@
           this.setLoadingText(toolName)
         },
         onChunk: async (chunk) => {
-          if (this.loading) {
-            await this.setLoading(this.dialogWindow, false)
-          }
           buffer += chunk;
           aiDiv.innerHTML = await window.overlayAPI.marked(buffer);
           this.dialogWindow.scrollTop = this.dialogWindow.scrollHeight;
         },
         onEnd: async () => {
+          if (this.loading) {
+            await this.setLoading(this.dialogWindow, false)
+          }
           aiDiv.innerHTML = await window.overlayAPI.marked(buffer);
           await this.highlightCodeBlocks(aiDiv);
           window.overlayAPI.removeChatListeners(messageId);
@@ -384,7 +387,6 @@
         container.appendChild(this.loadingIndicator);
       }
       else if (this.loadingIndicator) {
-          await new Promise(r => setTimeout(r, 2000));
           this.loadingIndicator.remove();
           this.loadingIndicator = null;
           this.loading = false;
@@ -394,10 +396,21 @@
     async sendAIMessage(systemMsg=null, skipTools=false) {
 
       const messageId = await window.overlayAPI.uuid();
+      let message = this.textInput.value.trim();
+
+      // handle new convos
+      if (!this.activeConvoId.value && !systemMsg) {
+        this.activeConvoId.value = await window.overlayAPI.uuid();
+        this.convoTitle = message.substring(0,this.convoTitleLimit);
+        await window.overlayAPI.addConversation(this.activeConvoId.value, this.convoTitle);
+        this.updateConversationList(this.activeConvoId.value, this.convoTitle);
+      }
+
       this.dialogBox.style.visibility = "visible";
 
-      let message = this.textInput.value.trim();
       const convoId = this.activeConvoId.value;
+
+      console.log('convoID', convoId)
 
       if (!message && ! systemMsg && this.audioInput.files.length === 0 && this.fileInput.files.length === 0) return;
 
@@ -443,7 +456,7 @@
 
       // this.activeConvoId.value = newConvoId || convoId;
       // if (newConvoId && newConvoName) {
-      //   this.updateConversationList(newConvoId, newConvoName);
+      //   
       // }
 
       this.clearFile();

@@ -29,4 +29,7 @@ contextBridge.exposeInMainWorld("overlayAPI", {
 
   listTools: () => ipcRenderer.invoke("listTools"),
   callTool: (name, args) => ipcRenderer.invoke("callTool", name, args),
+
+  addConversation: (convoId, convoTitle) => ipcRenderer.invoke("addConversation", convoId, convoTitle),
+  getConversations: () => ipcRenderer.invoke("getConversations"),
 });
