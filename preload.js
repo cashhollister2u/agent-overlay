@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld("overlayAPI", {
   
   addWidget: (callback) => {ipcRenderer.on("addWidget", (_event, payload) => callback(payload));},
 
-  chat: (messageId, message, history) => ipcRenderer.invoke("chat", messageId, message, history),
+  chat: (messageId, message, history, skipTools) => ipcRenderer.invoke("chat", messageId, message, history, skipTools),
   listenToChatStream: (messageId, handlers) => {
     if (handlers.onChunk)
       ipcRenderer.on(`chat-chunk-${messageId}`, (_, chunk) => handlers.onChunk(chunk));

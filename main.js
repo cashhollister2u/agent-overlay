@@ -90,41 +90,59 @@ ipcMain.handle('highlight', (_event, { code }) => {
   };
 });
 
-ipcMain.handle('chat', async (event, messageId, message, history) => {
+ipcMain.handle('chat', async (event, messageId, message, history, skipTools=false) => {
   const webContents = event.sender;
+  let toolContext = null
 
-  let feedback = "";
-  let validatedTool = null;
-  let attempt = 0 
-  while (attempt < 5)
+  if (!skipTools)
   {
-    const content = await selectTool(message, history, feedback)
-    const result = await validateTool(content.content);
-    if (result.success) {
-      validatedTool = result.tool;
-      break
+    let feedback = "";
+    let validatedTool = null;
+    let attempt = 0 
+    while (attempt < 5)
+    {
+      // AI Selects the best fit tool 
+      const content = await selectTool(message, history, feedback)
+      // The tool is validated based on the tools available in the mcp server
+      const result = await validateTool(content.content);
+      if (result.success) {
+        validatedTool = result.tool;
+        break
+      }
+      else {
+        feedback = result.tool;
+        console.log(result.tool);
+      }      
+      attempt += 1;
     }
-    else {
-      feedback = result.tool;
-      console.log(result.tool);
-    }      
-    attempt += 1;
+
+    console.log(validatedTool);
+    //After the tool is validated the tool is called on the mcp server
+    const response = await callTool(validatedTool.tool, validatedTool.arguments)
+    // The response is recieved from the server and parsed to json object
+    toolContext = JSON.parse(response.content[0].text);
+    console.log(toolContext.content)
+    console.log(toolContext.function_name)
+    console.log(toolContext.args)
+
+    // This allows the mpc server to call subiquent tool calls related to the UI management
+    const aiTools = new AITools(toolContext.function_name)
+    console.log('validated', await aiTools.validate())
+    if (await aiTools.validate()) 
+    {
+      const uiToolResponse = await aiTools.execute(win, toolContext.args)
+      // skip further ai chat calls if the ui tool response specifies 
+      if (uiToolResponse.skipAIResponse) {
+        webContents.send(`chat-chunk-${messageId}`, uiToolResponse.response);
+        webContents.send(`chat-end-${messageId}`);
+        return
+      }
+    }
   }
 
-  console.log(validatedTool);
-  const response = await callTool(validatedTool.tool, validatedTool.arguments)
-  const toolContext = JSON.parse(response.content[0].text);
-  console.log(toolContext.content)
-  console.log(toolContext.function_name)
-  console.log(toolContext.args)
-
-  const aiTools = new AITools(toolContext.function_name)
-  console.log('validated', await aiTools.validate())
-  if (await aiTools.validate()) 
-    await aiTools.execute(win, toolContext.args)
-
+  // Main Chat response that takes tool info into consideration
   try {
-    await chatWithLLM(message, history, toolContext.content[0].text, (chunk) => {
+    await chatWithLLM(message, history, toolContext?.content ?? "", (chunk) => {
       webContents.send(`chat-chunk-${messageId}`, chunk);
     });
 
@@ -149,13 +167,6 @@ ipcMain.handle('callTool', async (event, name, args) => {
 
 app.whenReady().then(async () => {
   await startMCP();
-
-  // const result = await callTool("custom_ping", {});
-  // console.log("PING RESULT:", result);
-
-  // const tools = await listTools();
-  // console.log(JSON.stringify(tools, null, 2));
-
   createOverlay();
 })
 

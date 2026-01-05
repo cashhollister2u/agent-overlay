@@ -46,7 +46,7 @@
     }
 
     async init() {
-      // this.sendAIMessage("Can you introduce youself and provide me only documentation of your capabilites based on your available tools.")
+      this.sendAIMessage("Call your available tools tool and list the output", false)
     }
 
     bindEvents() {
@@ -340,7 +340,7 @@
       });
     }
 
-    async sendAIMessage(systemMsg=null) {
+    async sendAIMessage(systemMsg=null, skipTools=false) {
       const messageId = await window.overlayAPI.uuid();
       this.dialogBox.style.visibility = "visible";
 
@@ -373,7 +373,7 @@
 
       await this.stream(messageId);
 
-      await window.overlayAPI.chat(messageId, message, this.history);
+      await window.overlayAPI.chat(messageId, message, this.history, skipTools);
 
       // console.log(response);
       // this.history += response.history

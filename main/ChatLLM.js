@@ -1,6 +1,4 @@
 const { startMCP, listTools, callTool, stopMcpServer } = require('./Mcp');
-const fs = require("fs/promises");
-const path = require("path");
 const http = require("http");
 
 async function chatWithLLM(message, history, toolContext, onChunk) {
@@ -109,6 +107,7 @@ async function validateTool(content) {
 async function selectTool(message, history, feedback, widgets) {
   message = `${feedback}\n ${message}`
   const tools = await listTools();
+  console.log(tools)
   return new Promise((resolve, reject) => {
     const req = http.request(
       {

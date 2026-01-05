@@ -34,6 +34,20 @@ def add_widget(widget_name:str, column_index:int, row_index:int, column_span:int
         }))
 
 @mcp.tool()
+async def available_tools() -> dict:
+    """
+    List all available tools with name and description.
+    """
+    tools = []
+
+    for tool in await mcp.list_tools(): 
+        tools.append({
+            "name": tool.name,
+            "description": tool.description or ""
+        })
+    return asdict(McpResponse(str(tools), "", {}))
+
+@mcp.tool()
 def get_datetime() -> dict:
     """ Tool to get current datetime """
     return asdict(McpResponse(f'Current time [%Y/%m/%d %H:%M:%S]: {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}', "", {}))
