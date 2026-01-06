@@ -36,6 +36,8 @@
       this.loading = false
       this.loadingIndicator = null
 
+      this.messageId = null
+
       this.history = []
 
       // If you have a global cookie helper, use it; else pass in via props
@@ -52,10 +54,16 @@
     }
 
     async init() {
+      // Load Conversations
       const conversations = await window.overlayAPI.getConversations();
+      let recentId = null;
+      let recentName = null
       conversations.forEach((convo) => {
         this.updateConversationList(convo.id, convo.title);
+        recentId = convo.id;
+        recentName = convo.title;
       })
+
       this.sendAIMessage("Call your available tools tool and list the output", false)
     }
 
@@ -152,7 +160,7 @@
     appendAiResponse(htmlString, fileLinkEl = null) {
       const div = document.createElement("div");
       div.className = "ai-response";
-      div.innerHTML = htmlString; // sanitize if parseMarkdown can output raw HTML
+      div.innerHTML = htmlString; 
       if (fileLinkEl) div.appendChild(fileLinkEl);
       this.dialogWindow.appendChild(div);
     }
@@ -202,10 +210,10 @@
       item.appendChild(removeBtn);
 
       this.convoNames.prepend(item);
-      this.setActiveConvo(convoId, convoName);
+      this.setActiveConvo(convoId);
     }
 
-    setActiveConvo(convoId, convoName) {
+    setActiveConvo(convoId) {
       // clear previous active class within THIS component only
       this.convoNames.querySelectorAll(".active-convo-item").forEach((el) => {
         el.classList.remove("active-convo-item");
@@ -215,10 +223,6 @@
       if (activeItem) activeItem.classList.add("active-convo-item");
 
       this.activeConvoId.value = String(convoId);
-
-      // if you have a per-component label, put it in the template as data-role and set it here
-      // const nameEl = this.root.querySelector('[data-role="activeConvoName"]');
-      // if (nameEl) nameEl.textContent = convoName;
 
       this.convoBox.style.visibility = "hidden";
       this.dialogBox.style.visibility = "visible";
@@ -241,25 +245,22 @@
     }
 
     async openConversation(convoId, convoName) {
+      window.overlayAPI.removeChatListeners(this.messageId);
+
       this.setActiveConvo(convoId, convoName);
 
       const formData = new FormData();
       formData.append("convo_id", convoId);
 
-      const res = await fetch("/api/get-messages/", {
-        method: "POST",
-        body: formData,
-        headers: { "X-CSRFToken": this.getCookie?.("csrftoken") },
-      });
+      const messages = await window.overlayAPI.getMessages(this.activeConvoId.value);
 
-      const data = await res.json();
       this.dialogWindow.replaceChildren();
 
-      (data.messages || []).forEach((msg) => {
+      (messages || []).forEach((msg) => {
         this.appendUserPrompt(msg.message);
 
         const fileLinkEl = msg.file ? this.buildFileLink(msg.id, msg.file) : null;
-        this.appendAiResponse(this.parseMarkdown(msg.response), fileLinkEl);
+        this.appendAiResponse(msg.ai_response, fileLinkEl);
       });
 
       this.dialogWindow.scrollTop = this.dialogWindow.scrollHeight;
@@ -325,14 +326,14 @@
       }
     }
 
-    async stream(messageId) {
+    async stream(conversationId, message, file, systemMsg) {
       const aiDiv = document.createElement("div");
       aiDiv.className = "ai-response";
       this.dialogWindow.appendChild(aiDiv);
 
       let buffer = "";
 
-      window.overlayAPI.listenToChatStream(messageId, {
+      window.overlayAPI.listenToChatStream(this.messageId, {
         onToolCall: async (toolName) => {
           console.log('tool name:', toolName)
           this.setLoadingText(toolName)
@@ -348,12 +349,15 @@
           }
           aiDiv.innerHTML = await window.overlayAPI.marked(buffer);
           await this.highlightCodeBlocks(aiDiv);
-          window.overlayAPI.removeChatListeners(messageId);
+          window.overlayAPI.removeChatListeners(this.messageId);
           this.dialogWindow.scrollTop = this.dialogWindow.scrollHeight;
+
+          // Add the AI response to the database
+          if (!systemMsg) await window.overlayAPI.addMessage(this.messageId, conversationId, message, aiDiv.innerHTML, file)
         },
         onError: (err) => {
           aiDiv.innerHTML += `<div class="error">Error: ${err}</div>`;
-          window.overlayAPI.removeChatListeners(messageId);
+          window.overlayAPI.removeChatListeners(this.messageId);
         }
       });
     }
@@ -400,7 +404,7 @@
 
     async sendAIMessage(systemMsg=null, skipTools=false) {
 
-      const messageId = await window.overlayAPI.uuid();
+      this.messageId = await window.overlayAPI.uuid();
       let message = this.textInput.value.trim();
 
       // handle new convos
@@ -427,6 +431,9 @@
 
       if (systemMsg) message = systemMsg;
 
+      // Add user message to the database
+      const role = systemMsg ? 'system' : 'user';
+
       // const formData = new FormData();
       // formData.append("convo_id", convoId);
       // formData.append("history", this.dialogWindow.innerText);
@@ -443,9 +450,10 @@
 
       console.log("message", message)
 
-      await this.stream(messageId);
 
-      await window.overlayAPI.chat(messageId, message, this.history, skipTools);
+      await this.stream(convoId, message, null, systemMsg); //null is file place holder
+
+      await window.overlayAPI.chat(this.messageId, message, this.history, skipTools);
 
       // console.log(response);
       // this.history += response.history

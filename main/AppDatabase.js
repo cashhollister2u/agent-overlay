@@ -9,8 +9,13 @@ class AppDatabase {
         this.DB_PATH = null;
         this.db = null;
 
+        // Conversations
         this.stmtGetConversations = null;
         this.stmtAddConversation = null;
+
+        // Messages
+        this.stmtGetMessages = null;
+        this.stmtAddMessage = null;
     }
 
     async init() {
@@ -60,13 +65,37 @@ class AppDatabase {
                 created_at TEXT NOT NULL DEFAULT (datetime('now'))
             );`
         );
+
+        this.db.exec(
+            `
+            CREATE TABLE IF NOT EXISTS Message (
+            id TEXT PRIMARY KEY,
+            conversation_id TEXT NOT NULL,
+            message TEXT, 
+            ai_response TEXT,
+            file TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+
+            FOREIGN KEY (conversation_id) REFERENCES Conversation(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_message_conversation_id_created
+            ON Message(conversation_id, created_at);
+            `
+        )
     }
 
     prepareStatements() {
-        this.stmtGetConversations = this.db.prepare(`SELECT * FROM Conversation ORDER BY created_at DESC`);
+        // Conversations
+        this.stmtGetConversations = this.db.prepare(`SELECT * FROM Conversation ORDER BY created_at ASC`);
         this.stmtAddConversation = this.db.prepare(`INSERT INTO Conversation (id, title) VALUES (?, ?)`);
+        
+        // Messages
+        this.stmtGetMessages = this.db.prepare(`SELECT * FROM Message WHERE conversation_id = ? ORDER BY created_at ASC`)
+        this.stmtAddMessage = this.db.prepare(`INSERT INTO Message (id, conversation_id, message, ai_response, file) VALUES (?, ?, ?, ?, ?)`)
     }
 
+    // Conversations
     async getConversations() {
         return this.stmtGetConversations.all();
     }
@@ -75,6 +104,15 @@ class AppDatabase {
         console.log(id, title)
         const info = this.stmtAddConversation.run(id, title); // binds params
         return info;
+    }
+
+    // Messages 
+    async getMessages(conversation_id) {
+        return this.stmtGetMessages.all(conversation_id);
+    }
+
+    async addMessage(id, conversation_id, message, ai_response, file) {
+        return this.stmtAddMessage.run(id, conversation_id, message, ai_response, file);
     }
 }
 

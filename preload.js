@@ -32,4 +32,7 @@ contextBridge.exposeInMainWorld("overlayAPI", {
 
   addConversation: (convoId, convoTitle) => ipcRenderer.invoke("addConversation", convoId, convoTitle),
   getConversations: () => ipcRenderer.invoke("getConversations"),
+
+  addMessage: (id, conversation_id, message, ai_response, file) => ipcRenderer.invoke("addMessage", id, conversation_id, message, ai_response, file),
+  getMessages: (conversation_id) => ipcRenderer.invoke("getMessages", conversation_id),
 });

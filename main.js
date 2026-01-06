@@ -178,6 +178,16 @@ ipcMain.handle('addConversation', async (event, convoId, convoTitle) => {
 
 })
 
+ipcMain.handle('addMessage', async (event, id, conversation_id, message, ai_response, file) => {
+  let response = await db.addMessage(id, conversation_id, message, ai_response, file);
+  response = await db.getMessages(conversation_id);
+  console.log(response)
+})
+
+ipcMain.handle('getMessages', async (event, conversation_id) => {
+  return await db.getMessages(conversation_id);
+})
+
 app.whenReady().then(async () => {
   await startMCP();
   db = new AppDatabase();

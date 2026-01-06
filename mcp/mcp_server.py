@@ -30,7 +30,7 @@ def Add_Widget(widget_name:str, column_index:int, row_index:int, column_span:int
             "column_index": column_index, 
             "row_index": row_index, 
             "column_span": column_span, 
-            "row_span":row_span
+            "row_span":row_span,
         }))
 
 @mcp.tool()
